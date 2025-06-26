@@ -181,8 +181,20 @@ const App = () => {
             setShowForm={setShowForm}
           />
         );
-      case 'weather':
-        return <WeatherView weather={weather} />;
+     case 'weather': {
+        const numDays =
+          tripData.startDate && tripData.endDate
+            ? Math.ceil((new Date(tripData.endDate) - new Date(tripData.startDate)) / (1000 * 60 * 60 * 24)) + 1
+            : 0;
+
+        return (
+          <WeatherView
+            destination={tripData.destination}
+            startDate={tripData.startDate}
+            numDays={numDays}
+          />
+        );
+      }
         case 'packing':
           return <PackingView packingList={packingList} />;        
         case 'events':

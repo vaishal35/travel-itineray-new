@@ -63,8 +63,6 @@ const App = () => {
   const travelMethods = [
     { value: 'plane', label: 'Plane', icon: Plane },
     { value: 'car', label: 'Car', icon: Car },
-    { value: 'train', label: 'Train', icon: Train },
-    { value: 'boat', label: 'Boat', icon: Ship }
   ];
 
   const accommodationTypes = [

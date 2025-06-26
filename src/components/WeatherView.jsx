@@ -6,7 +6,7 @@ const WeatherView = ({ destination, startDate, numDays }) => {
   const API_KEY = '14e5cb478f036316eeab752a0801ddfd'; 
 
   useEffect(() => {
-    if (!destination || !startDate || !numDays) { console};
+    if (!destination || !startDate || !numDays) return;
 
     const fetchWeather = async () => {
       try {
@@ -15,7 +15,6 @@ const WeatherView = ({ destination, startDate, numDays }) => {
           `https://api.openweathermap.org/geo/1.0/direct?q=${destination}&limit=1&appid=${API_KEY}`         
         );
 
-        console.log('geoRes:', geoRes);
         if (!geoRes.ok) throw new Error("Failed to fetch location data");
 
         const geoData = await geoRes.json();
@@ -27,8 +26,7 @@ const WeatherView = ({ destination, startDate, numDays }) => {
         const forecastRes = await fetch(
           `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`
         );
-        const forecastData = await forecastRes.json();
-        console.log('Forecast result:', forecastData);
+        const forecastData = await forecastRes.json();      
 
         // Step 3: Sample forecast every 8th entry (1 per day)
         const dailyForecasts = forecastData.list.filter((_, idx) => idx % 8 === 0).slice(0, numDays);

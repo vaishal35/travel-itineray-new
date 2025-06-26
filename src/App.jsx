@@ -142,14 +142,14 @@ const App = () => {
   const TabButton = ({ id, label, icon: Icon }) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+      className={`flex items-center space-x-3 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
         activeTab === id 
-          ? 'bg-blue-600 text-white' 
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          ? 'bg-blue-600 text-white shadow-lg transform translate-y-[-2px]' 
+          : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-blue-600 border border-gray-200'
       }`}
     >
       <Icon size={20} />
-      <span className="hidden sm:inline">{label}</span>
+      <span className="hidden sm:inline whitespace-nowrap">{label}</span>
     </button>
   );
 
@@ -220,23 +220,32 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Travel Planner</h1>
-            <div className="flex items-center space-x-2">
-              <MapPin className="text-blue-600" size={24} />
-              <span className="text-sm text-gray-600">{tripData.destination || 'Plan your next adventure'}</span>
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Plane className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900">Travel Planner</h1>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 bg-gray-100 px-4 py-2 rounded-lg">
+                <MapPin className="text-blue-600" size={20} />
+                <span className="text-sm font-medium text-gray-700">
+                  {tripData.destination || 'Plan your next adventure'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       {!showForm && (
-        <nav className="bg-white border-b">
+        <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex space-x-4 py-4 overflow-x-auto">
+            <div className="flex space-x-2 py-4 overflow-x-auto">
               <TabButton id="itinerary" label="Itinerary" icon={Calendar} />
               <TabButton id="weather" label="Weather" icon={Cloud} />
               <TabButton id="packing" label="Packing" icon={Package} />
@@ -248,8 +257,10 @@ const App = () => {
         </nav>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {renderContent()}
+      <main className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          {renderContent()}
+        </div>
       </main>
     </div>
   );

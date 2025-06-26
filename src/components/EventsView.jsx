@@ -1,65 +1,111 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import {  Star, Calendar } from 'lucide-react';
+import EventCard from "./EventCard";
 
-const EventList = ({ destination, startDate, endDate }) => {
+const EventsView = ({ destination, startDate, endDate }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const API_KEY = '8iNpL4Z0alTimjTuVudVKUpPbqSFLHyE';
+  const [error, setError] = useState("");
+  const API_KEY = "8iNpL4Z0alTimjTuVudVKUpPbqSFLHyE";
 
   useEffect(() => {
     const fetchEvents = async () => {
       if (!destination || !startDate || !API_KEY) return;
       setLoading(true);
 
+      const params = {
+        apikey: API_KEY,
+        city: destination,
+        startDateTime: `${startDate}T00:00:00Z`,
+        ...(endDate && { endDateTime: `${endDate}T23:59:59Z` }),
+        sort: "date,asc",
+        size: 10,
+      };
       try {
-        const response = await axios.get('https://app.ticketmaster.com/discovery/v2/events.json', {
-          params: {
-            apikey: API_KEY,
-            city: destination,
-            startDateTime: `${startDate}T00:00:00Z`,
-            ...(endDate && { endDateTime: `${endDate}T23:59:59Z` }),
-            sort: 'date,asc',
-            size: 10,
-          }
-        });
+        // const response = await axios.get(
+        //   "https://app.ticketmaster.com/discovery/v2/events.json",
+        //   {
+        //     params: {
+        //       apikey: API_KEY,
+        //       city: destination,
+        //       startDateTime: `${startDate}T00:00:00Z`,
+        //       ...(endDate && { endDateTime: `${endDate}T23:59:59Z` }),
+        //       sort: "date,asc",
+        //       size: 10,
+        //     },
+        //   }
+        // );
+
+        const response = await axios.get(
+          "https://app.ticketmaster.com/discovery/v2/events.json",
+          { params }
+        );
 
         const eventsList = response.data._embedded?.events || [];
+        if (eventsList.length === 0) {
+          console.log("Ticketmaster returned no events", params);
+        }
         setEvents(eventsList);
-      } catch (error) {
-        console.error('Error fetching events:', error);
+        setError("");
+      } catch (err) {
+        console.error("Error fetching events:", err);
+        setError("Failed to fetch events.");
       } finally {
         setLoading(false);
+        console.log("events,", events);
       }
     };
 
     fetchEvents();
   }, [destination, startDate, endDate, API_KEY]);
 
-  if (loading) return <p className="text-center text-blue-600">Loading events...</p>;
-  if (events.length === 0) return <p className="text-center text-gray-500">No events found for your trip.</p>;
+
 
   return (
-    <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {events.map(event => (
-        <div key={event.id} className="bg-white shadow-lg rounded-xl overflow-hidden">
-          <img src={event.images?.[0]?.url} alt={event.name} className="w-full h-48 object-cover" />
-          <div className="p-4">
-            <h3 className="font-bold text-lg">{event.name}</h3>
-            <p className="text-sm text-gray-600 mt-1">{event.dates.start.localDate}</p>
-            <p className="text-sm text-gray-700">{event._embedded?.venues?.[0]?.name}</p>
-            <a
-              href={event.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block mt-3 text-blue-500 font-semibold hover:underline"
-            >
-              Buy Tickets
-            </a>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-5 border-b border-gray-200">
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center justify-center w-12 h-12 bg-amber-100 rounded-xl">
+            <Star size={24} className="text-amber-600" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900">
+              Local Events
+            </h2>
+            <p className="text-gray-600 mt-1">
+              {events.length} {events.length === 1 ? "event" : "events"}{" "}
+              happening during your trip
+            </p>
           </div>
         </div>
-      ))}
+      </div>
+
+      <div className="p-6">
+        {events.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                <Calendar size={32} className="text-gray-400" />
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              No events found
+            </h3>
+            <p className="text-gray-600">
+              We couldn't find any local events for your travel dates.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {events.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-export default EventList;
+export default EventsView;

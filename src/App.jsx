@@ -198,7 +198,10 @@ const App = () => {
         case 'packing':
           return <PackingView packingList={packingList} />;        
         case 'events':
-          return <EventsView localEvents={localEvents} addToFavorites={addToFavorites} />;
+          return <EventsView 
+            destination={tripData.destination}
+            startDate={tripData.startDate}
+            endDate={tripData.endDate}/>;
         case 'favorites':
           return <FavoritesView favorites={favorites} removeFromFavorites={removeFromFavorites} />;
         case 'budget':

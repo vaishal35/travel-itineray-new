@@ -8,7 +8,7 @@ import {
   Palette,
 } from "lucide-react";
 
-const EventCard = ({ event }) => {
+const EventCard = ({ event, addToFavorites }) => {
   const image = event.images?.[0]?.url || "/placeholder.png";
   const venue = event._embedded?.venues?.[0];
   const score = event?.score || event?._score || 0;
@@ -64,7 +64,7 @@ const EventCard = ({ event }) => {
               </h3>
             </div>
 
-            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-3">
               <div className="flex items-center space-x-1">
                 <Calendar size={14} />
                 <span>{event.dates.start.localDate}</span>
@@ -76,8 +76,7 @@ const EventCard = ({ event }) => {
                 {event.type}
               </span>
             </div>
-
-            <div className="flex items-center justify-between">
+          
               <div className="flex items-center space-x-2">
                 <DollarSign size={16} className="text-green-600" />
                 <span className="font-semibold text-green-700">

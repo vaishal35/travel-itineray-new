@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Trash2, Heart, Star, MapPin } from 'lucide-react';
 
 const FavoritesView = ({ favorites, removeFromFavorites }) => (

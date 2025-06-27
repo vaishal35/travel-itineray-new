@@ -188,72 +188,89 @@ export default function HotelSearch({ tripData, setTripData, getAmadeusToken }) 
   });
   
   return (
-    <div className="mt-4 p-4 bg-green-50 rounded-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">
-          Hotel Options
-          {tripData.passengers > 1 && (
-            <span className="text-sm font-normal text-gray-600 ml-2">(for {tripData.passengers} guests)</span>
-          )}
-        </h3>
-        <button
-          onClick={searchHotels}
-          disabled={loadingHotels}
-          className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
-        >
-          {loadingHotels ? <Loader size={16} className="animate-spin" /> : <Search size={16} />}
-          <span>{loadingHotels ? 'Searching...' : 'Search Hotels'}</span>
-        </button>
-      </div>
+    <div className="mt-6">
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">Hotel Options</h3>
+            {tripData.passengers > 1 && (
+              <p className="text-sm text-gray-600 mt-1">For {tripData.passengers} guests</p>
+            )}
+          </div>
+          <button
+            onClick={searchHotels}
+            disabled={loadingHotels}
+            className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          >
+            {loadingHotels ? <Loader size={18} className="animate-spin" /> : <Search size={18} />}
+            <span className="font-medium">{loadingHotels ? 'Searching...' : 'Search Hotels'}</span>
+          </button>
+        </div>
 
-      {showHotelOptions && (
-        <div className="space-y-3">
-          {loadingHotels ? (
-            <div className="text-center py-8">
-              <Loader size={32} className="animate-spin mx-auto mb-4 text-green-600" />
-              <p className="text-gray-600">Searching for hotels...</p>
-            </div>
-          ) : hotelOptions.length > 0 ? (
-            hotelOptions.map((hotel) => (
-              <div
-                key={hotel.hotelId}
-                onClick={() => selectAccommodation(hotel)}
-                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                  selectedHotel?.hotelId === hotel.hotelId
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-200 hover:border-gray-300 bg-white'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-4 mb-2">
-                      <span className="font-semibold text-lg">{hotel.name}</span>
-                      <span className="text-sm bg-gray-100 px-2 py-1 rounded">{hotel.location}</span>
+        {showHotelOptions && (
+          <div className="space-y-4">
+            {loadingHotels ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Loader size={32} className="animate-spin text-blue-600" />
+                </div>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">Searching for hotels</h4>
+                <p className="text-gray-600">Finding the best accommodations for your stay...</p>
+              </div>
+            ) : hotelOptions.length > 0 ? (
+              hotelOptions.map((hotel) => (
+                <div
+                  key={hotel.hotelId}
+                  onClick={() => selectAccommodation(hotel)}
+                  className={`p-6 border rounded-xl cursor-pointer transition-all duration-200 ${
+                    selectedHotel?.hotelId === hotel.hotelId
+                      ? 'border-blue-500 bg-blue-50 shadow-md'
+                      : 'border-gray-200 hover:border-gray-300 hover:shadow-lg bg-white'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Hotel className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-gray-900 mb-1">{hotel.name}</h4>
+                          <p className="text-sm text-gray-600 mb-2">{hotel.location}</p>
+                          <div className="mb-3">{renderStarRating(hotel.rating)}</div>
+                          <div className="flex flex-wrap gap-3">
+                            {hotel.amenities?.slice(0, 4).map((amenity, i) => (
+                              <div key={i} className="flex items-center space-x-2 text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                                {renderAmenityIcon(amenity)}
+                                <span className="capitalize">{amenity.toLowerCase().replace('_', ' ')}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">{hotel.description}</p>
                     </div>
-                    <div className="text-sm text-gray-600 mb-2">{renderStarRating(hotel.rating)}</div>
-                    <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-                      {hotel.amenities?.slice(0, 4).map((a, i) => (
-                        <span key={i} className="flex items-center space-x-1">
-                          {renderAmenityIcon(a)}
-                          <span>{a.toLowerCase().replace('_', ' ')}</span>
-                        </span>
-                      ))}
+                    <div className="text-right ml-6">
+                      <div className="text-2xl font-bold text-gray-900">${hotel.price}</div>
+                      <div className="text-sm text-gray-600">{hotel.currency} total</div>
+                      <div className="text-xs text-gray-500 mt-1">${hotel.pricePerNight}/night</div>
+                      <div className="text-xs text-gray-500">{hotel.totalNights} night{hotel.totalNights > 1 ? 's' : ''}</div>
                     </div>
-                  </div>
-                  <div className="text-right min-w-[120px]">
-                    <div className="text-2xl font-bold text-green-600">${hotel.price}</div>
-                    <div className="text-sm text-gray-500">{hotel.currency} total</div>
-                    <div className="text-xs text-gray-500">${hotel.pricePerNight}/night</div>
                   </div>
                 </div>
-                <div className="mt-2 text-sm text-gray-700 line-clamp-2">{hotel.description}</div>
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-8 h-8 text-gray-400" />
+                </div>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">Ready to search</h4>
+                <p className="text-gray-600">Click "Search Hotels" to find available accommodations</p>
               </div>
-            ))
-          ) : (
-            <p className="text-gray-500 text-center py-4">Click "Search Hotels" to see available options</p>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

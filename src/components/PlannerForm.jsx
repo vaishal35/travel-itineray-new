@@ -34,7 +34,7 @@ const PlannerForm = ({
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
   const [loadingDestination, setLoadingDestination] = useState(false);
-  
+
   // Refs for input fields
   const currentLocationRef = useRef(null);
   const destinationRef = useRef(null);
@@ -59,7 +59,7 @@ const PlannerForm = ({
           client_secret: amadeusCreds.clientSecret,
         }),
       });
-      
+
       const data = await response.json();
       return data.access_token;
     } catch (error) {
@@ -103,7 +103,7 @@ const PlannerForm = ({
       );
 
       const data = await response.json();
-      
+
       if (data.data) {
         const formattedSuggestions = data.data.map((location) => ({
           id: location.id,
@@ -160,11 +160,11 @@ const PlannerForm = ({
   // Debounced search function
   const debouncedSearch = (query, isDestination = false, delay = 300) => {
     const timerRef = isDestination ? destinationTimerRef : currentLocationTimerRef;
-    
+
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
-    
+
     timerRef.current = setTimeout(() => {
       searchLocationSuggestions(query, isDestination);
     }, delay);
@@ -258,19 +258,19 @@ const PlannerForm = ({
       );
 
       const data = await response.json();
-      
+
       if (data.data && data.data.length > 0) {
         const formattedFlights = data.data.map((offer, index) => {
           // Calculate total duration more accurately
           const segments = offer.itineraries[0].segments;
           const firstSegment = segments[0];
           const lastSegment = segments[segments.length - 1];
-          
+
           // Calculate actual travel time from departure to arrival
           const departureTime = new Date(firstSegment.departure.at);
           const arrivalTime = new Date(lastSegment.arrival.at);
           const totalMinutes = Math.round((arrivalTime - departureTime) / (1000 * 60));
-          
+
           console.log(`Flight ${index + 1}:`, {
             departure: firstSegment.departure.at,
             arrival: lastSegment.arrival.at,
@@ -382,7 +382,7 @@ const PlannerForm = ({
           },
         }
       );
-      
+
       const data = await response.json();
       if (data.data && data.data.length > 0) {
         return data.data[0].iataCode;
@@ -390,7 +390,7 @@ const PlannerForm = ({
     } catch (error) {
       console.error('Error getting IATA code:', error);
     }
-    
+
     // Enhanced fallback mapping for Indiana and Florida airports
     const cityToIATA = {
       'New York': 'JFK',
@@ -407,12 +407,12 @@ const PlannerForm = ({
       'Jacksonville': 'JAX',
       'Fort Lauderdale': 'FLL'
     };
-    
+
     // Try to match city name from the input
     const cityMatch = Object.keys(cityToIATA).find(city => 
       cityName.toLowerCase().includes(city.toLowerCase())
     );
-    
+
     return cityMatch ? cityToIATA[cityMatch] : 'IND'; // Default to Indianapolis
   };
 
@@ -424,7 +424,7 @@ const PlannerForm = ({
       const minutes = calculatedMinutes % 60;
       return `${hours}h ${minutes}m`;
     }
-    
+
     // Fallback to parsing ISO 8601 duration
     if (duration && duration.startsWith('PT')) {
       const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
@@ -432,7 +432,7 @@ const PlannerForm = ({
       const minutes = match[2] ? parseInt(match[2]) : 0;
       return `${hours}h ${minutes}m`;
     }
-    
+
     return 'N/A';
   };
 
@@ -480,400 +480,525 @@ const PlannerForm = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Plan Your Trip</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Current Location with Autocomplete */}
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <MapPin size={16} className="inline mr-1" />
-            Current Location
-          </label>
-          <div className="relative">
-            <input
-              ref={currentLocationRef}
-              type="text"
-              value={tripData.currentLocation || ''}
-              onChange={handleCurrentLocationChange}
-              onFocus={() => {
-                if (currentLocationSuggestions.length > 0) {
-                  setShowCurrentLocationSuggestions(true);
-                }
-              }}
-              className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Where are you starting from?"
-              autoComplete="off"
-            />
-            {loadingCurrentLocation && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <Loader size={16} className="animate-spin text-gray-400" />
-              </div>
-            )}
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <ChevronDown size={16} className="text-gray-400" />
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4">
+      <div className="max-w-9xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
+            Plan Your Perfect Trip
+          </h1>
+          <p className="text-gray-600 text-lg">Discover amazing destinations and create unforgettable memories</p>
+        </div>
+  
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Current Location Suggestions Dropdown */}
-          {showCurrentLocationSuggestions && currentLocationSuggestions.length > 0 && (
-            <div
-              ref={currentLocationDropdownRef}
-              className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-            >
-              {currentLocationSuggestions.map((suggestion) => (
-                <div
-                  key={suggestion.id}
-                  onClick={() => selectCurrentLocationSuggestion(suggestion)}
-                  className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                >
-                  <div className="font-medium text-gray-900">{suggestion.displayName}</div>
-                  {suggestion.fullAddress !== suggestion.displayName && (
-                    <div className="text-sm text-gray-500 mt-1">{suggestion.fullAddress}</div>
-                  )}
-                  <div className="text-xs text-blue-600 mt-1 capitalize">
-                    {suggestion.subType.toLowerCase()}
-                  </div>
+          {/* Left Column - Trip Basics */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Location Card */}
+            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                  <MapPin className="text-blue-600" size={24} />
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Destination with Autocomplete */}
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Destination
-          </label>
-          <div className="relative">
-            <input
-              ref={destinationRef}
-              type="text"
-              value={tripData.destination}
-              onChange={handleDestinationChange}
-              onFocus={() => {
-                if (destinationSuggestions.length > 0) {
-                  setShowDestinationSuggestions(true);
-                }
-              }}
-              className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Where are you going?"
-              autoComplete="off"
-            />
-            {loadingDestination && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <Loader size={16} className="animate-spin text-gray-400" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">Where To?</h2>
+                  <p className="text-gray-500 text-sm">Set your journey's start and end points</p>
+                </div>
               </div>
-            )}
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <ChevronDown size={16} className="text-gray-400" />
-            </div>
-          </div>
-          
-          {/* Destination Suggestions Dropdown */}
-          {showDestinationSuggestions && destinationSuggestions.length > 0 && (
-            <div
-              ref={destinationDropdownRef}
-              className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-            >
-              {destinationSuggestions.map((suggestion) => (
-                <div
-                  key={suggestion.id}
-                  onClick={() => selectDestinationSuggestion(suggestion)}
-                  className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                >
-                  <div className="font-medium text-gray-900">{suggestion.displayName}</div>
-                  {suggestion.fullAddress !== suggestion.displayName && (
-                    <div className="text-sm text-gray-500 mt-1">{suggestion.fullAddress}</div>
-                  )}
-                  <div className="text-xs text-blue-600 mt-1 capitalize">
-                    {suggestion.subType.toLowerCase()}
+  
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Current Location */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Starting From
+                  </label>
+                  <div className="relative group">
+                    <input
+                      ref={currentLocationRef}
+                      type="text"
+                      value={tripData.currentLocation || ''}
+                      onChange={handleCurrentLocationChange}
+                      onFocus={() => {
+                        if (currentLocationSuggestions.length > 0) {
+                          setShowCurrentLocationSuggestions(true);
+                        }
+                      }}
+                      className="w-full p-4 pr-12 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                      placeholder="Enter your departure city"
+                      autoComplete="off"
+                    />
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                      {loadingCurrentLocation && (
+                        <Loader size={18} className="animate-spin text-blue-500" />
+                      )}
+                      <ChevronDown size={18} className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Start Date
-          </label>
-          <input
-            type="date"
-            value={tripData.startDate}
-            onChange={(e) => setTripData({...tripData, startDate: e.target.value})}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            End Date
-          </label>
-          <input
-            type="date"
-            value={tripData.endDate}
-            onChange={(e) => setTripData({...tripData, endDate: e.target.value})}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
-
-      {/* Number of Passengers */}
-      <div className="mt-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          <Users size={16} className="inline mr-1" />
-          Number of Passengers
-        </label>
-        <select
-          value={tripData.passengers || 1}
-          onChange={(e) => setTripData({...tripData, passengers: parseInt(e.target.value)})}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
-            <option key={num} value={num}>
-              {num} {num === 1 ? 'Passenger' : 'Passengers'}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="mt-6">
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Travel Method
-        </label>
-        <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
-          {travelMethods.map((method) => {
-            const Icon = method.icon;
-            return (
-              <button
-                key={method.value}
-                onClick={() => handleTravelMethodChange(method.value)}
-                className={`flex flex-col items-center p-4 rounded-lg border-2 transition-colors ${
-                  tripData.travelMethod === method.value
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <Icon size={24} className="mb-2" />
-                <span className="text-sm font-medium">{method.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Flight Search Section */}
-        {tripData.travelMethod === 'plane' && (
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">
-                Flight Options
-                {tripData.passengers > 1 && (
-                  <span className="text-sm font-normal text-gray-600 ml-2">
-                    (for {tripData.passengers} passengers)
-                  </span>
-                )}
-              </h3>
-              <button
-                onClick={searchFlights}
-                disabled={loadingFlights}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {loadingFlights ? (
-                  <Loader size={16} className="animate-spin" />
-                ) : (
-                  <Search size={16} />
-                )}
-                <span>{loadingFlights ? 'Searching...' : 'Search Flights'}</span>
-              </button>
-            </div>
-
-            {showFlightOptions && (
-              <div className="space-y-3">
-                {loadingFlights ? (
-                  <div className="text-center py-8">
-                    <Loader size={32} className="animate-spin mx-auto mb-4 text-blue-600" />
-                    <p className="text-gray-600">Searching for flights...</p>
-                  </div>
-                ) : flightOptions.length > 0 ? (
-                  flightOptions.map((flight) => (
+  
+                  {/* Current Location Suggestions */}
+                  {showCurrentLocationSuggestions && currentLocationSuggestions.length > 0 && (
                     <div
-                      key={flight.id}
-                      onClick={() => selectFlight(flight)}
-                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                        selectedFlight?.id === flight.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      ref={currentLocationDropdownRef}
+                      className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto"
+                    >
+                      {currentLocationSuggestions.map((suggestion) => (
+                        <div
+                          key={suggestion.id}
+                          onClick={() => selectCurrentLocationSuggestion(suggestion)}
+                          className="p-4 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                        >
+                          <div className="font-semibold text-gray-900">{suggestion.displayName}</div>
+                          {suggestion.fullAddress !== suggestion.displayName && (
+                            <div className="text-sm text-gray-500 mt-1">{suggestion.fullAddress}</div>
+                          )}
+                          <div className="text-xs text-blue-600 mt-1 font-medium capitalize">
+                            {suggestion.subType.toLowerCase()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+  
+                {/* Destination */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Going To
+                  </label>
+                  <div className="relative group">
+                    <input
+                      ref={destinationRef}
+                      type="text"
+                      value={tripData.destination}
+                      onChange={handleDestinationChange}
+                      onFocus={() => {
+                        if (destinationSuggestions.length > 0) {
+                          setShowDestinationSuggestions(true);
+                        }
+                      }}
+                      className="w-full p-4 pr-12 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                      placeholder="Enter your destination"
+                      autoComplete="off"
+                    />
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                      {loadingDestination && (
+                        <Loader size={18} className="animate-spin text-blue-500" />
+                      )}
+                      <ChevronDown size={18} className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    </div>
+                  </div>
+  
+                  {/* Destination Suggestions */}
+                  {showDestinationSuggestions && destinationSuggestions.length > 0 && (
+                    <div
+                      ref={destinationDropdownRef}
+                      className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl max-h-64 overflow-y-auto"
+                    >
+                      {destinationSuggestions.map((suggestion) => (
+                        <div
+                          key={suggestion.id}
+                          onClick={() => selectDestinationSuggestion(suggestion)}
+                          className="p-4 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                        >
+                          <div className="font-semibold text-gray-900">{suggestion.displayName}</div>
+                          {suggestion.fullAddress !== suggestion.displayName && (
+                            <div className="text-sm text-gray-500 mt-1">{suggestion.fullAddress}</div>
+                          )}
+                          <div className="text-xs text-blue-600 mt-1 font-medium capitalize">
+                            {suggestion.subType.toLowerCase()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+  
+            {/* Dates & Passengers Card */}
+            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                  <Users className="text-green-600" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">Trip Details</h2>
+                  <p className="text-gray-500 text-sm">When are you traveling and with how many people?</p>
+                </div>
+              </div>
+  
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={tripData.startDate}
+                    onChange={(e) => setTripData({...tripData, startDate: e.target.value})}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                  />
+                </div>
+  
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={tripData.endDate}
+                    onChange={(e) => setTripData({...tripData, endDate: e.target.value})}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                  />
+                </div>
+  
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Travelers
+                  </label>
+                  <select
+                    value={tripData.passengers || 1}
+                    onChange={(e) => setTripData({...tripData, passengers: parseInt(e.target.value)})}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
+                      <option key={num} value={num}>
+                        {num} {num === 1 ? 'Traveler' : 'Travelers'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+  
+            {/* Travel Method Card */}
+            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                  <div className="text-purple-600">✈️</div>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">How Are You Traveling?</h2>
+                  <p className="text-gray-500 text-sm">Choose your preferred mode of transportation</p>
+                </div>
+              </div>
+  
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {travelMethods.map((method) => {
+                  const Icon = method.icon;
+                  return (
+                    <button
+                      key={method.value}
+                      onClick={() => handleTravelMethodChange(method.value)}
+                      className={`relative flex flex-col items-center p-6 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+                        tripData.travelMethod === method.value
+                          ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-lg'
+                          : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
                       }`}
                     >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-4 mb-2">
-                            <span className="font-semibold text-lg">
-                              {flight.departure.iataCode} → {flight.arrival.iataCode}
-                            </span>
-                            <span className="text-sm bg-gray-100 px-2 py-1 rounded">
-                              {flight.airline}
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-6 text-sm text-gray-600">
-                            <span>
-                              Departure: {formatTime(flight.departure.at)}
-                            </span>
-                            <span>
-                              Arrival: {formatTime(flight.arrival.at)}
-                            </span>
-                            <span>
-                              Duration: {formatDuration(flight.duration)}
-                            </span>
-                            <span>
-                              {flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}
-                            </span>
-                          </div>
+                      <Icon size={32} className="mb-3" />
+                      <span className="text-sm font-semibold">{method.label}</span>
+                      {tripData.travelMethod === method.value && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs">✓</span>
                         </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-green-600">
-                            ${flight.price}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {flight.currency}
-                          </div>
-                        </div>
-                      </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+  
+              {/* Flight Search Section */}
+              {tripData.travelMethod === 'plane' && (
+                <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">Flight Options</h3>
+                      {tripData.passengers > 1 && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          Searching for {tripData.passengers} passengers
+                        </p>
+                      )}
                     </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-center py-4">
-                    Click "Search Flights" to see available options
-                  </p>
-                )}
+                    <button
+                      onClick={searchFlights}
+                      disabled={loadingFlights}
+                      className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loadingFlights ? (
+                        <Loader size={18} className="animate-spin" />
+                      ) : (
+                        <Search size={18} />
+                      )}
+                      <span className="font-semibold">{loadingFlights ? 'Searching...' : 'Find Flights'}</span>
+                    </button>
+                  </div>
+  
+                  {showFlightOptions && (
+                    <div className="space-y-4">
+                      {loadingFlights ? (
+                        <div className="text-center py-12">
+                          <Loader size={40} className="animate-spin mx-auto mb-4 text-blue-600" />
+                          <p className="text-gray-600 font-medium">Finding the best flights for you...</p>
+                          <p className="text-gray-500 text-sm mt-2">This may take a few moments</p>
+                        </div>
+                      ) : flightOptions.length > 0 ? (
+                        flightOptions.map((flight) => (
+                          <div
+                            key={flight.id}
+                            onClick={() => selectFlight(flight)}
+                            className={`p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                              selectedFlight?.id === flight.id
+                                ? 'border-green-500 bg-green-50 shadow-lg'
+                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                            }`}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-4 mb-3">
+                                  <span className="font-bold text-xl text-gray-800">
+                                    {flight.departure.iataCode} → {flight.arrival.iataCode}
+                                  </span>
+                                  <span className="text-sm bg-gray-100 px-3 py-1 rounded-full font-medium">
+                                    {flight.airline}
+                                  </span>
+                                  {selectedFlight?.id === flight.id && (
+                                    <span className="text-sm bg-green-500 text-white px-3 py-1 rounded-full font-medium">
+                                      Selected
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
+                                  <div>
+                                    <span className="font-medium text-gray-800">Departure</span>
+                                    <p>{formatTime(flight.departure.at)}</p>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium text-gray-800">Arrival</span>
+                                    <p>{formatTime(flight.arrival.at)}</p>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium text-gray-800">Duration</span>
+                                    <p>{formatDuration(flight.duration)}</p>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium text-gray-800">Stops</span>
+                                    <p>{flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}</p>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right ml-6">
+                                <div className="text-3xl font-bold text-green-600">
+                                  ${flight.price}
+                                </div>
+                                <div className="text-sm text-gray-500 font-medium">
+                                  {flight.currency}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Search size={24} className="text-gray-400" />
+                          </div>
+                          <p className="text-gray-500 font-medium">Click "Find Flights" to see available options</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+  
+            {/* Accommodation Card */}
+            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                  <div className="text-orange-600">🏨</div>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">Where Will You Stay?</h2>
+                  <p className="text-gray-500 text-sm">Choose your accommodation preference</p>
+                </div>
+              </div>
+  
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {accommodationTypes.map((type) => {
+                  const Icon = type.icon;
+                  return (
+                    <button
+                      key={type.value}
+                      onClick={() => handleAccommodationChange(type.value)}
+                      className={`relative flex items-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+                        tripData.accommodation === type.value
+                          ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-lg'
+                          : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
+                      }`}
+                    >
+                      <Icon size={24} className="mr-3" />
+                      <span className="font-semibold">{type.label}</span>
+                      {tripData.accommodation === type.value && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs">✓</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+  
+              <HotelSearch 
+                tripData={tripData} 
+                setTripData={setTripData} 
+                getAmadeusToken={getAmadeusToken}
+              />
+            </div>
+          </div>
+  
+          {/* Right Column - Preferences & Actions */}
+          <div className="space-y-6">
+            
+            {/* Food Preferences Card */}
+            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                  <div className="text-red-600">🍴</div>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800">Food Preferences</h2>
+                  <p className="text-gray-500 text-sm">Customize your dining experience</p>
+                </div>
+              </div>
+  
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Cuisine Types
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {cuisineTypes.map((cuisine) => (
+                      <button
+                        key={cuisine}
+                        onClick={() => {
+                          const current = tripData.foodPreferences.cuisine;
+                          const updated = current.includes(cuisine)
+                            ? current.filter(c => c !== cuisine)
+                            : [...current, cuisine];
+                          setTripData({
+                            ...tripData,
+                            foodPreferences: {...tripData.foodPreferences, cuisine: updated}
+                          });
+                        }}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                          tripData.foodPreferences.cuisine.includes(cuisine)
+                            ? 'bg-blue-500 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {cuisine}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+  
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Dietary Restrictions
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {dietaryOptions.map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => {
+                          const current = tripData.foodPreferences.dietary;
+                          const updated = current.includes(option)
+                            ? current.filter(d => d !== option)
+                            : [...current, option];
+                          setTripData({
+                            ...tripData,
+                            foodPreferences: {...tripData.foodPreferences, dietary: updated}
+                          });
+                        }}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                          tripData.foodPreferences.dietary.includes(option)
+                            ? 'bg-green-500 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+            {/* Budget Card */}
+            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                  <div className="text-green-600">💰</div>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800">Budget</h2>
+                  <p className="text-gray-500 text-sm">Set your spending limit</p>
+                </div>
+              </div>
+              
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">
+                  $
+                </div>
+                <input
+                  type="number"
+                  value={tripData.budget}
+                  onChange={(e) => setTripData({...tripData, budget: e.target.value})}
+                  className="w-full pl-8 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white text-lg font-semibold"
+                  placeholder="5000"
+                />
+              </div>
+            </div>
+  
+            {/* Selected Flight Summary */}
+            {selectedFlight && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-200">
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-white font-bold">✓</span>
+                  </div>
+                  <h3 className="font-bold text-green-800 text-lg">Flight Selected</h3>
+                </div>
+                <div className="bg-white rounded-xl p-4 border border-green-200">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-bold text-gray-800 text-lg">
+                        {selectedFlight.departure.iataCode} → {selectedFlight.arrival.iataCode}
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">{selectedFlight.airline}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-green-600">${selectedFlight.price}</p>
+                      <p className="text-sm text-gray-500">{selectedFlight.currency}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
-          </div>
-        )}
-      </div>
-
-      <div className="mt-6">
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Accommodation Type
-        </label>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {accommodationTypes.map((type) => {
-            const Icon = type.icon;
-            return (
-              <button
-                key={type.value}
-                onClick={() => handleAccommodationChange(method.value)}
-                className={`flex items-center p-4 rounded-lg border-2 transition-colors ${
-                  tripData.accommodation === type.value
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <Icon size={20} className="mr-3" />
-                <span className="font-medium">{type.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-      <HotelSearch tripData={tripData} setTripData={setTripData} getAmadeusToken={getAmadeusToken}/>
-
-      </div>
-
-      <div className="mt-6">
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Food Preferences
-        </label>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-gray-600 mb-2">Cuisine Types</label>
-            <div className="flex flex-wrap gap-2">
-              {cuisineTypes.map((cuisine) => (
-                <button
-                  key={cuisine}
-                  onClick={() => {
-                    const current = tripData.foodPreferences.cuisine;
-                    const updated = current.includes(cuisine)
-                      ? current.filter(c => c !== cuisine)
-                      : [...current, cuisine];
-                    setTripData({
-                      ...tripData,
-                      foodPreferences: {...tripData.foodPreferences, cuisine: updated}
-                    });
-                  }}
-                  className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                    tripData.foodPreferences.cuisine.includes(cuisine)
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  {cuisine}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm text-gray-600 mb-2">Dietary Restrictions</label>
-            <div className="flex flex-wrap gap-2">
-              {dietaryOptions.map((option) => (
-                <button
-                  key={option}
-                  onClick={() => {
-                    const current = tripData.foodPreferences.dietary;
-                    const updated = current.includes(option)
-                      ? current.filter(d => d !== option)
-                      : [...current, option];
-                    setTripData({
-                      ...tripData,
-                      foodPreferences: {...tripData.foodPreferences, dietary: updated}
-                    });
-                  }}
-                  className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                    tripData.foodPreferences.dietary.includes(option)
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
+  
+            {/* Generate Button */}
+            <button
+              onClick={generateItinerary}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 px-6 rounded-2xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105"
+            >
+              🚀 Generate My Dream Itinerary
+            </button>
           </div>
         </div>
       </div>
-
-      <div className='mt-4'>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Budget ($)
-          </label>
-          <input
-            type="number"
-            value={tripData.budget}
-            onChange={(e) => setTripData({...tripData, budget: e.target.value})}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Total budget"
-          />
-        </div>
-
-      {selectedFlight && (
-        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <h3 className="font-semibold text-green-800 mb-2">Selected Flight</h3>
-          <p className="text-green-700">
-            {selectedFlight.departure.iataCode} → {selectedFlight.arrival.iataCode} - 
-            ${selectedFlight.price} ({selectedFlight.airline})
-          </p>
-        </div>
-      )}
-
-      <button
-        onClick={generateItinerary}
-        className="w-full mt-8 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-      >
-        Generate Itinerary
-      </button>
     </div>
   );
 };
